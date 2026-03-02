@@ -36,6 +36,8 @@ const initDb = async () => {
             FOREIGN KEY(patient_id) REFERENCES patients(id)
         )`);
 
+        db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_patient_id ON sessions(patient_id)`);
+
         db.run(`CREATE TABLE IF NOT EXISTS templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,

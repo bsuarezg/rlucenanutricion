@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Search, FileText, Activity, RefreshCw, Eye } from 'lucide-react';
@@ -6,6 +6,7 @@ import type { Session, Patient } from '../types';
 import SessionForm from '../components/SessionForm';
 import SessionDetailsModal from '../components/SessionDetailsModal';
 import { syncOfflineSessions } from '../services/dataService';
+import { API_BASE_URL } from '../config';
 
 const Sessions: React.FC = () => {
     const { token } = useAuth();
@@ -22,7 +23,7 @@ const Sessions: React.FC = () => {
 
     const fetchSessions = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/sessions', {
+            const res = await axios.get(`${API_BASE_URL}/sessions`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSessions(res.data);
@@ -33,7 +34,7 @@ const Sessions: React.FC = () => {
 
     const fetchPatients = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/patients', {
+            const res = await axios.get(`${API_BASE_URL}/patients`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const patientMap: Record<number, string> = {};
@@ -46,15 +47,15 @@ const Sessions: React.FC = () => {
         }
     };
 
-    const enrichedSessions = useMemo(() => sessions.map(s => ({
+    const enrichedSessions = sessions.map(s => ({
         ...s,
         patient_name: patients[s.patient_id] || 'Desconocido'
-    })), [sessions, patients]);
+    }));
 
-    const filteredSessions = useMemo(() => enrichedSessions.filter(s =>
+    const filteredSessions = enrichedSessions.filter(s =>
         s.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.date.includes(searchTerm)
-    ), [enrichedSessions, searchTerm]);
+    );
 
     const handleSync = async () => {
         if (!token) return;
