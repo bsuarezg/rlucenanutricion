@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Edit2, Search, X, Save } from 'lucide-react';
 import type { Patient } from '../types';
+import { API_BASE_URL } from '../config';
 
 const Patients: React.FC = () => {
     const { token } = useAuth();
@@ -26,7 +27,7 @@ const Patients: React.FC = () => {
 
     const fetchPatients = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/patients', {
+            const res = await axios.get(`${API_BASE_URL}/patients`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPatients(res.data);
@@ -62,11 +63,11 @@ const Patients: React.FC = () => {
         e.preventDefault();
         try {
             if (editingPatient) {
-                await axios.put(`http://localhost:3001/api/patients/${editingPatient.id}`, formData, {
+                await axios.put(`${API_BASE_URL}/patients/${editingPatient.id}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             } else {
-                await axios.post('http://localhost:3001/api/patients', formData, {
+                await axios.post(`${API_BASE_URL}/patients`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             }

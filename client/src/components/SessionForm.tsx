@@ -5,6 +5,7 @@ import { X, FileText, Activity, Calculator } from 'lucide-react';
 import type { Patient, Template } from '../types';
 import { saveSession } from '../services/dataService';
 import { calculateFormulas } from '../services/formulaService';
+import { API_BASE_URL } from '../config';
 
 interface SessionFormProps {
     onClose: () => void;
@@ -32,8 +33,8 @@ const SessionForm: React.FC<SessionFormProps> = ({ onClose, onSave }) => {
         const fetchData = async () => {
             try {
                 const [patientsRes, templatesRes] = await Promise.all([
-                    axios.get('http://localhost:3001/api/patients', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('http://localhost:3001/api/templates', { headers: { Authorization: `Bearer ${token}` } })
+                    axios.get(`${API_BASE_URL}/patients`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${API_BASE_URL}/templates`, { headers: { Authorization: `Bearer ${token}` } })
                 ]);
                 setPatients(patientsRes.data);
                 setTemplates(templatesRes.data);

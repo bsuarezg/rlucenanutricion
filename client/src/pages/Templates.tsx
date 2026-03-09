@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Trash2, Save, X } from 'lucide-react';
 import type { Template } from '../types';
+import { API_BASE_URL } from '../config';
 
 const Templates: React.FC = () => {
     const { token } = useAuth();
@@ -20,7 +21,7 @@ const Templates: React.FC = () => {
 
     const fetchTemplates = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/templates', {
+            const res = await axios.get(`${API_BASE_URL}/templates`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTemplates(res.data);
@@ -51,7 +52,7 @@ const Templates: React.FC = () => {
         if (!name || validFields.length === 0) return;
 
         try {
-            await axios.post('http://localhost:3001/api/templates', {
+            await axios.post(`${API_BASE_URL}/templates`, {
                 name,
                 type,
                 fields: validFields
@@ -70,7 +71,7 @@ const Templates: React.FC = () => {
     const handleDelete = async (id: number) => {
         if (!confirm('¿Estás seguro de eliminar esta plantilla?')) return;
         try {
-            await axios.delete(`http://localhost:3001/api/templates/${id}`, {
+            await axios.delete(`${API_BASE_URL}/templates/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchTemplates();

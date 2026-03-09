@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Users, FileText, Activity, TrendingUp } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 const Dashboard: React.FC = () => {
     const { token, user } = useAuth();
@@ -15,8 +16,8 @@ const Dashboard: React.FC = () => {
         const fetchStats = async () => {
             try {
                 const [patientsRes, sessionsRes] = await Promise.all([
-                    axios.get('http://localhost:3001/api/patients', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('http://localhost:3001/api/sessions', { headers: { Authorization: `Bearer ${token}` } })
+                    axios.get(`${API_BASE_URL}/patients`, { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get(`${API_BASE_URL}/sessions`, { headers: { Authorization: `Bearer ${token}` } })
                 ]);
 
                 setStats({

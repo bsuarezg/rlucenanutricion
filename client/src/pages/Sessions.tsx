@@ -6,6 +6,7 @@ import type { Session, Patient } from '../types';
 import SessionForm from '../components/SessionForm';
 import SessionDetailsModal from '../components/SessionDetailsModal';
 import { syncOfflineSessions } from '../services/dataService';
+import { API_BASE_URL } from '../config';
 
 const Sessions: React.FC = () => {
     const { token } = useAuth();
@@ -22,7 +23,7 @@ const Sessions: React.FC = () => {
 
     const fetchSessions = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/sessions', {
+            const res = await axios.get(`${API_BASE_URL}/sessions`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSessions(res.data);
@@ -33,7 +34,7 @@ const Sessions: React.FC = () => {
 
     const fetchPatients = async () => {
         try {
-            const res = await axios.get('http://localhost:3001/api/patients', {
+            const res = await axios.get(`${API_BASE_URL}/patients`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const patientMap: Record<number, string> = {};

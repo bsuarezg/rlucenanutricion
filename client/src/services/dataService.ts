@@ -1,5 +1,6 @@
 import { openDB } from 'idb';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const DB_NAME = 'nutrition-db';
 const STORE_NAME = 'pending-sessions';
@@ -54,7 +55,7 @@ export const downloadXML = (data: any) => {
 export const saveSession = async (data: any, token: string) => {
     downloadXML(data);
     try {
-        const response = await axios.post('http://localhost:3001/api/sessions', data, {
+        const response = await axios.post(`${API_BASE_URL}/sessions`, data, {
             headers: { Authorization: `Bearer ${token}` }
         });
         return { success: true, mode: 'server', data: response.data };
@@ -73,7 +74,7 @@ export const syncOfflineSessions = async (token: string) => {
     for (const session of sessions) {
         try {
             const { id, timestamp, ...dataToSync } = session;
-            await axios.post('http://localhost:3001/api/sessions', dataToSync, {
+            await axios.post(`${API_BASE_URL}/sessions`, dataToSync, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             await store.delete(session.id);
