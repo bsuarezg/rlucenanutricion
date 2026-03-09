@@ -36,11 +36,22 @@ class Auth {
     }
 
     public function authenticate() {
-        $headers = getallheaders();
-        $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
-        if (!$authHeader) {
+        // Robust way to get the Authorization header across different server setups (Apache/Nginx/CGI)
+        $authHeader = '';
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authHeader = trim($_SERVER['HTTP_AUTHORIZATION']);
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $authHeader = trim($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+        } else {
+            $headers = getallheaders();
+            if (isset($headers['Authorization'])) {
+                $authHeader = trim($headers['Authorization']);
+            }
+        }
+
+        if (empty($authHeader)) {
             http_response_code(401);
-            echo json_encode(['error' => 'No token provided']);
+            echo json_encode(['error' => 'No token provided. Server might be stripping the Authorization header.']);
             exit;
         }
 
@@ -49,7 +60,7 @@ class Auth {
 
         if (!$user) {
             http_response_code(403);
-            echo json_encode(['error' => 'Invalid token']);
+            echo json_encode(['error' => 'Invalid or expired token']);
             exit;
         }
         return $user;
