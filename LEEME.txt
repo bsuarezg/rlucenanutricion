@@ -1,0 +1,64 @@
+# App Nutrición (Frontend + PHP)
+
+Este repositorio contiene el código fuente para la aplicación de Nutrición.
+La aplicación está compuesta por un Frontend en React (carpeta `/client`) y un Backend en PHP con SQLite (carpeta `/php_server`).
+
+## CÓMO GENERAR LA CARPETA DE DISTRIBUCIÓN PARA SUBIR AL SFTP
+
+Para que la web funcione en tu servidor real, no puedes subir directamente la carpeta `/client`. Primero debes **compilar** el código.
+
+He creado dos scripts automáticos para hacer esto en un solo paso. Al ejecutarlos, crearán una carpeta llamada `DISTRIBUCION` que contendrá exactamente la estructura que debes subir a tu SFTP (como muestras en la imagen).
+
+### Pasos para Windows:
+1. Abre tu CMD (Símbolo del sistema) o la terminal en tu editor de código.
+2. Navega hasta la carpeta raíz de este proyecto.
+3. Ejecuta el archivo:
+   `generar_distribucion.bat`
+   (O simplemente haz doble clic en el archivo `generar_distribucion.bat` desde el Explorador de Archivos).
+4. Espera a que termine.
+
+### Pasos para Mac/Linux:
+1. Abre tu terminal.
+2. Navega hasta la carpeta raíz de este proyecto.
+3. Dale permisos de ejecución al script si es necesario: `chmod +x generar_distribucion.sh`
+4. Ejecuta el archivo:
+   `./generar_distribucion.sh`
+5. Espera a que termine.
+
+---
+
+## CÓMO SUBIR AL SERVIDOR (SFTP)
+
+Una vez que el script haya terminado, verás una nueva carpeta llamada `DISTRIBUCION` en la raíz de tu proyecto. El contenido de esa carpeta es el que debes subir a tu servidor.
+
+**Estructura esperada en tu SFTP:**
+(Debes arrastrar el contenido de la carpeta DISTRIBUCION a la raíz de tu web (`/` o `/public_html`))
+
+```text
+Sitio remoto: /
+├── api/             (Carpeta que contiene la lógica PHP y la base de datos)
+│   ├── db/          (Aquí se guardará el archivo nutrition.db)
+│   ├── index.php    (Punto de entrada de la API)
+│   ├── db.php       (Conexión a SQLite)
+│   └── ...
+├── assets/          (Carpeta generada por React con los scripts JS y CSS compilados)
+├── index.html       (La página principal generada por React)
+└── ...              (Otros archivos como vite.svg)
+```
+
+### ⚠️ IMPORTANTE: PERMISOS DE BASE DE DATOS (CHMOD)
+
+Para que el backend funcione y te permita iniciar sesión, SQLite necesita poder **escribir y crear archivos** dentro de la carpeta `api/db`.
+Si al entrar a la web ves errores de inicio de sesión o un error en la consola, se debe a que tu servidor de hosting está bloqueando la escritura en esa carpeta.
+
+**Debes configurar los permisos de la carpeta `/api/db` de la siguiente forma:**
+1. En tu cliente FTP (como FileZilla, WinSCP, o el panel de control web de tu hosting), haz clic derecho sobre la carpeta `api/db` (que está en el servidor remoto).
+2. Selecciona "Permisos de archivo" o "File Permissions".
+3. Cambia los permisos a **777** o **775** (esto permite la escritura, lectura y ejecución).
+4. Guarda los cambios.
+
+### CREDENCIALES POR DEFECTO
+
+El usuario administrador por defecto que se creará la primera vez que se cargue la base de datos es:
+- **Usuario:** rlucena
+- **Contraseña:** Gilb3rt01+
