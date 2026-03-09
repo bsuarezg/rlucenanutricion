@@ -6,6 +6,7 @@ import type { Patient, Template } from '../types';
 import { saveSession } from '../services/dataService';
 import { calculateFormulas } from '../services/formulaService';
 import { API_BASE_URL } from '../config';
+import ZoneMeasurements from './ZoneMeasurements';
 
 interface SessionFormProps {
     onClose: () => void;
@@ -189,49 +190,18 @@ const SessionForm: React.FC<SessionFormProps> = ({ onClose, onSave }) => {
 
                     {/* Clinical Data */}
                     <section>
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
-                            <h4 className="text-lg font-semibold text-primary-700 flex items-center">
-                                <Activity size={20} className="mr-2" />
-                                Datos Clínicos / Mediciones
-                            </h4>
-                            <div className="flex gap-2">
-                                <select
-                                    className="text-sm border rounded px-2 py-1"
-                                    onChange={(e) => {
-                                        if (e.target.value) handleApplyTemplate(e.target.value);
-                                        e.target.value = "";
-                                    }}
-                                >
-                                    <option value="">Cargar Plantilla...</option>
-                                    {templates.filter(t => t.type === 'measurement').map(t => (
-                                        <option key={t.id} value={t.id}>{t.name}</option>
-                                    ))}
-                                </select>
-                                <button
-                                    type="button"
-                                    onClick={() => handleAddCustomField(true)}
-                                    className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-                                >
-                                    + Campo
-                                </button>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {Object.entries(clinicalData).map(([key, value]) => (
-                                <div key={key}>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1 capitalize">{key}</label>
-                                    <input
-                                        type="text"
-                                        value={value}
-                                        onChange={(e) => handleDataChange(key, e.target.value, true)}
-                                        className="w-full border rounded-md px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500"
-                                    />
-                                </div>
-                            ))}
-                            {Object.keys(clinicalData).length === 0 && (
-                                <p className="text-gray-400 text-sm col-span-full italic">No hay mediciones registradas. Carga una plantilla o añade campos.</p>
-                            )}
-                        </div>
+                        <h4 className="text-lg font-semibold text-primary-700 flex items-center mb-4 border-b pb-2">
+                            <Activity size={20} className="mr-2" />
+                            Datos Clínicos / Mediciones por Zona
+                        </h4>
+
+                        <ZoneMeasurements
+                            clinicalData={clinicalData}
+                            onDataChange={(key, value) => handleDataChange(key, value, true)}
+                            onAddCustomField={() => handleAddCustomField(true)}
+                            onApplyTemplate={handleApplyTemplate}
+                            templates={templates}
+                        />
                     </section>
 
                     {/* Formula Data */}

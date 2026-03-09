@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, FileText, Activity } from 'lucide-react';
 import type { Session } from '../types';
+import ZoneMeasurements from './ZoneMeasurements';
 
 interface SessionDetailsModalProps {
     session: Session & { patient_name?: string };
@@ -58,19 +59,12 @@ const SessionDetailsModal: React.FC<SessionDetailsModalProps> = ({ session, onCl
                     <section>
                         <h4 className="text-lg font-semibold mb-4 text-primary-700 border-b pb-2 flex items-center">
                             <Activity size={20} className="mr-2" />
-                            Datos Clínicos / Mediciones
+                            Datos Clínicos / Mediciones por Zona
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {Object.entries(session.clinical_data || {}).map(([key, value]) => (
-                                <div key={key} className="bg-gray-50 p-3 rounded-md">
-                                    <label className="block text-xs font-medium text-gray-500 mb-1 capitalize">{key}</label>
-                                    <p className="font-mono text-gray-800">{value}</p>
-                                </div>
-                            ))}
-                            {Object.keys(session.clinical_data || {}).length === 0 && (
-                                <p className="text-gray-400 text-sm col-span-full italic">No hay mediciones registradas.</p>
-                            )}
-                        </div>
+                        <ZoneMeasurements
+                            clinicalData={session.clinical_data || {}}
+                            readonly={true}
+                        />
                     </section>
 
                     {/* Formula Data */}
