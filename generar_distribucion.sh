@@ -24,7 +24,8 @@ cp -r client/dist/* DISTRIBUCION/
 # 4. Copiar la API de PHP
 echo "Copiando API de PHP..."
 mkdir -p DISTRIBUCION/api
-cp -r php_server/api/* DISTRIBUCION/api/
+# Usamos un punto al final para asegurar que se copien los archivos ocultos (.htaccess)
+cp -r php_server/api/. DISTRIBUCION/api/
 
 # 5. Asegurar permisos locales (opcional)
 chmod -R 755 DISTRIBUCION

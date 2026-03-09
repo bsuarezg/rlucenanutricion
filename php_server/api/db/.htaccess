@@ -1,1 +1,5 @@
-Deny from all
+# Secure the database file
+<Files "nutrition.db">
+    Order allow,deny
+    Deny from all
+</Files>
