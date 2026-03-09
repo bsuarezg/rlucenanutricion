@@ -9,53 +9,70 @@ Para que la web funcione en tu servidor real, no puedes subir directamente la ca
 
 He creado dos scripts automáticos para hacer esto en un solo paso. Al ejecutarlos, crearán una carpeta llamada `DISTRIBUCION` que contendrá exactamente la estructura que debes subir a tu SFTP (como muestras en la imagen).
 
-### Pasos para Windows:
+### Opción A) Usando el Script Automático (Recomendado)
+**Para Windows:**
 1. Abre tu CMD (Símbolo del sistema) o la terminal en tu editor de código.
 2. Navega hasta la carpeta raíz de este proyecto.
-3. Ejecuta el archivo:
-   `generar_distribucion.bat`
-   (O simplemente haz doble clic en el archivo `generar_distribucion.bat` desde el Explorador de Archivos).
+3. Ejecuta el archivo: `generar_distribucion.bat`
 4. Espera a que termine.
 
-### Pasos para Mac/Linux:
+**Para Mac/Linux:**
 1. Abre tu terminal.
 2. Navega hasta la carpeta raíz de este proyecto.
-3. Dale permisos de ejecución al script si es necesario: `chmod +x generar_distribucion.sh`
-4. Ejecuta el archivo:
-   `./generar_distribucion.sh`
-5. Espera a que termine.
+3. Dale permisos: `chmod +x generar_distribucion.sh`
+4. Ejecuta: `./generar_distribucion.sh`
+
+### Opción B) Método Manual (Paso a Paso)
+Si los scripts fallan por alguna razón o prefieres hacerlo a mano:
+1. Abre tu terminal (CMD) y entra en la carpeta `client`:
+   `cd client`
+2. Instala las dependencias de Node.js (solo es necesario la primera vez o si añades paquetes):
+   `npm install`
+3. Compila el código de React para producción:
+   `npm run build`
+4. Esto creará una carpeta llamada `dist` dentro de `client/`.
+5. Ve a tu escritorio o a cualquier parte y crea una carpeta nueva llamada `DISTRIBUCION`.
+6. Copia TODO el contenido de `client/dist/` (es decir: `index.html`, la carpeta `assets/`, etc.) y pégalo dentro de la nueva carpeta `DISTRIBUCION`.
+7. Ahora, ve a la carpeta original `php_server/` de tu proyecto.
+8. Copia la carpeta `api/` entera (asegúrate de incluir los archivos ocultos `.htaccess`).
+9. Pega esa carpeta `api/` dentro de tu nueva carpeta `DISTRIBUCION`.
 
 ---
 
-## CÓMO SUBIR AL SERVIDOR (SFTP)
+## CÓMO SUBIR AL SERVIDOR (SFTP) Y ESTRUCTURA FINAL
 
-Una vez que el script haya terminado, verás una nueva carpeta llamada `DISTRIBUCION` en la raíz de tu proyecto. El contenido de esa carpeta es el que debes subir a tu servidor.
+Una vez que tengas tu carpeta `DISTRIBUCION` lista (ya sea por el script o de forma manual), **su contenido es el que debes subir a tu servidor**.
 
-**Estructura esperada en tu SFTP:**
-(Debes arrastrar el contenido de la carpeta DISTRIBUCION a la raíz de tu web (`/` o `/public_html`))
+**Estructura exacta esperada en la raíz de tu SFTP (`/` o `/public_html`):**
 
 ```text
 Sitio remoto: /
-├── api/             (Carpeta que contiene la lógica PHP y la base de datos)
+├── api/             (Carpeta que contiene la lógica PHP)
+│   ├── .htaccess    (Archivo oculto IMPORTANTÍSIMO para las rutas del servidor)
 │   ├── db/          (Aquí se guardará el archivo nutrition.db)
-│   ├── index.php    (Punto de entrada de la API)
+│   │   └── .htaccess (Archivo oculto para seguridad)
+│   ├── index.php    (Punto de entrada)
 │   ├── db.php       (Conexión a SQLite)
 │   └── ...
-├── assets/          (Carpeta generada por React con los scripts JS y CSS compilados)
+├── assets/          (Carpeta generada por React con los scripts JS y CSS)
 ├── index.html       (La página principal generada por React)
-└── ...              (Otros archivos como vite.svg)
+└── vite.svg         (Icono)
 ```
 
-### ⚠️ IMPORTANTE: PERMISOS DE BASE DE DATOS (CHMOD)
+### ⚠️ MUY IMPORTANTE: SOLUCIÓN A "NO ME GUARDA NADA" (PERMISOS CHMOD)
 
-Para que el backend funcione y te permita iniciar sesión, SQLite necesita poder **escribir y crear archivos** dentro de la carpeta `api/db`.
-Si al entrar a la web ves errores de inicio de sesión o un error en la consola, se debe a que tu servidor de hosting está bloqueando la escritura en esa carpeta.
+Si puedes iniciar sesión pero **no se guardan los pacientes, sesiones o plantillas**, es un problema de permisos en el servidor (el servidor no te deja escribir/modificar el archivo de base de datos).
 
-**Debes configurar los permisos de la carpeta `/api/db` de la siguiente forma:**
-1. En tu cliente FTP (como FileZilla, WinSCP, o el panel de control web de tu hosting), haz clic derecho sobre la carpeta `api/db` (que está en el servidor remoto).
-2. Selecciona "Permisos de archivo" o "File Permissions".
-3. Cambia los permisos a **777** o **775** (esto permite la escritura, lectura y ejecución).
-4. Guarda los cambios.
+Para solucionar esto, no basta con darle permisos a la carpeta, el archivo `.db` en sí mismo también los necesita. Sigue estos pasos exactos en FileZilla o tu cliente SFTP:
+
+1. Inicia sesión en la web por primera vez (esto obligará a PHP a intentar crear el archivo `nutrition.db` en la carpeta `api/db/`).
+2. Ve a tu cliente FTP (FileZilla, WinSCP, etc.).
+3. Entra a la carpeta `/api/db/` en tu servidor remoto.
+4. **Localiza el archivo `nutrition.db`**.
+5. Haz clic derecho sobre el archivo `nutrition.db` y selecciona **"Permisos de archivo"** (o "File Permissions").
+6. Cambia los permisos a **777** (o 666). Esto permite lectura y escritura.
+7. Haz clic derecho también en la propia carpeta `db/` y asegúrate de que tiene permisos **777**.
+8. Guarda los cambios. ¡Ahora ya podrás guardar y editar sin problemas!
 
 ### CREDENCIALES POR DEFECTO
 
