@@ -21,33 +21,28 @@ if (!$user) {
 $db = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $db->query('SELECT * FROM patients ORDER BY created_at DESC');
-    $patients = [];
+    $stmt = $db->query('SELECT * FROM zones');
+    $zones = [];
     while ($row = $stmt->fetchArray(SQLITE3_ASSOC)) {
-        $patients[] = $row;
+        $zones[] = $row;
     }
-    echo json_encode($patients);
+    echo json_encode($zones);
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
-    if (!isset($data['name'])) {
+    if (!isset($data['value']) || !isset($data['label'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Name is required']);
+        echo json_encode(['error' => 'Value and label are required']);
         exit();
     }
 
-    $stmt = $db->prepare('INSERT INTO patients (name, email, phone, dni, birth_date, gender, notes) VALUES (:name, :email, :phone, :dni, :birth_date, :gender, :notes)');
-    $stmt->bindValue(':name', $data['name'], SQLITE3_TEXT);
-    $stmt->bindValue(':email', $data['email'] ?? '', SQLITE3_TEXT);
-    $stmt->bindValue(':phone', $data['phone'] ?? '', SQLITE3_TEXT);
-    $stmt->bindValue(':dni', $data['dni'] ?? '', SQLITE3_TEXT);
-    $stmt->bindValue(':birth_date', $data['birth_date'] ?? null, SQLITE3_TEXT);
-    $stmt->bindValue(':gender', $data['gender'] ?? '', SQLITE3_TEXT);
-    $stmt->bindValue(':notes', $data['notes'] ?? '', SQLITE3_TEXT);
+    $stmt = $db->prepare('INSERT INTO zones (value, label) VALUES (:value, :label)');
+    $stmt->bindValue(':value', $data['value'], SQLITE3_TEXT);
+    $stmt->bindValue(':label', $data['label'], SQLITE3_TEXT);
 
     try {
         $stmt->execute();
         $id = $db->lastInsertRowID();
-        echo json_encode(['id' => $id, 'name' => $data['name']]);
+        echo json_encode(['id' => $id, 'value' => $data['value'], 'label' => $data['label']]);
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
@@ -63,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit();
     }
 
-    $stmt = $db->prepare('DELETE FROM patients WHERE id = :id');
+    $stmt = $db->prepare('DELETE FROM zones WHERE id = :id');
     $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
     $stmt->execute();
 

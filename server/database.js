@@ -1,69 +1,106 @@
 const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 
-const dbPath = path.resolve(__dirname, 'nutrition.db');
-const db = new sqlite3.Database(dbPath);
+const dbPath = path.join(__dirname, '../php_server/api/db/nutrition.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error connecting to database:', err);
+    } else {
+        console.log('Connected to SQLite database');
+        initializeDatabase();
+    }
+});
 
-const initDb = async () => {
+function initializeDatabase() {
     db.serialize(() => {
-        db.run(`CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password_hash TEXT
-        )`);
+        // Enable foreign keys
+        db.run('PRAGMA foreign_keys = ON');
 
-        db.run(`CREATE TABLE IF NOT EXISTS patients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            dni TEXT,
-            dob TEXT,
-            email TEXT,
-            phone TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`);
+        // Create tables
+        db.run(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE,
+                password TEXT
+            )
+        `);
 
-        db.run(`CREATE TABLE IF NOT EXISTS sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            patient_id INTEGER,
-            date TEXT,
-            place TEXT,
-            type TEXT,
-            price REAL,
-            attended INTEGER DEFAULT 1,
-            clinical_data TEXT,
-            formula_data TEXT,
-            FOREIGN KEY(patient_id) REFERENCES patients(id)
-        )`);
+        db.run(`
+            CREATE TABLE IF NOT EXISTS patients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT,
+                phone TEXT,
+                dni TEXT UNIQUE,
+                birth_date DATE,
+                gender TEXT,
+                notes TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-        db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_patient_id ON sessions(patient_id)`);
+        db.run(`
+            CREATE TABLE IF NOT EXISTS sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_id INTEGER,
+                date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                notes TEXT,
+                type TEXT,
+                data TEXT,
+                FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+            )
+        `);
 
-        db.run(`CREATE TABLE IF NOT EXISTS templates (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            type TEXT NOT NULL,
-            fields TEXT NOT NULL
-        )`);
+        db.run(`
+            CREATE TABLE IF NOT EXISTS templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                type TEXT NOT NULL,
+                fields TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-        const adminUser = 'rlucena';
-        const adminPass = 'Gilb3rt01+';
+        db.run(`
+            CREATE TABLE IF NOT EXISTS zones (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                value TEXT NOT NULL UNIQUE,
+                label TEXT NOT NULL
+            )
+        `);
 
-        db.get("SELECT * FROM users WHERE username = ?", [adminUser], async (err, row) => {
-            if (err) {
-                console.error("Error checking for admin user:", err);
-                return;
+        // Create default user if not exists
+        db.get('SELECT COUNT(*) as count FROM users', [], async (err, row) => {
+            if (err) return console.error(err);
+            if (row.count === 0) {
+                const salt = await bcrypt.genSalt(10);
+                const hash = await bcrypt.hash('Gilb3rt01+', salt);
+                db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['rlucena', hash]);
+                console.log('Created default user');
             }
-            if (!row) {
-                const hash = await bcrypt.hash(adminPass, 10);
-                db.run("INSERT INTO users (username, password_hash) VALUES (?, ?)", [adminUser, hash], (err) => {
-                    if (err) console.error("Error creating admin user:", err);
-                    else console.log("Admin user created.");
+        });
+
+        // Seed zones if table is empty
+        db.get('SELECT COUNT(*) as count FROM zones', [], (err, row) => {
+            if (err) return console.error(err);
+            if (row.count === 0) {
+                const stmt = db.prepare('INSERT INTO zones (value, label) VALUES (?, ?)');
+                const defaultZones = [
+                    { value: 'torso', label: 'Torso' },
+                    { value: 'piernas', label: 'Piernas' },
+                    { value: 'brazos', label: 'Brazos' },
+                    { value: 'cabeza', label: 'Cabeza' },
+                    { value: 'cuello', label: 'Cuello' }
+                ];
+                defaultZones.forEach(zone => {
+                    stmt.run(zone.value, zone.label);
                 });
-            } else {
-                console.log("Admin user already exists.");
+                stmt.finalize();
+                console.log('Created default zones');
             }
         });
     });
-};
+}
 
-module.exports = { db, initDb };
+module.exports = db;

@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Plus, Search, User, Mail, Phone, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Search, X, Save } from 'lucide-react';
-import type { Patient } from '../types';
 import { API_BASE_URL } from '../config';
 
-const Patients: React.FC = () => {
+interface Patient {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    dni: string;
+    birth_date: string;
+    gender: string;
+    notes: string;
+}
+
+const Patients = () => {
     const { token } = useAuth();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-
-    // Form State
+    const [isCreating, setIsCreating] = useState(false);
     const [formData, setFormData] = useState({
-        name: '',
-        dni: '',
-        dob: '',
-        email: '',
-        phone: ''
+        name: '', email: '', phone: '', dni: '', birth_date: '', gender: '', notes: ''
     });
 
     useEffect(() => {
@@ -36,183 +39,181 @@ const Patients: React.FC = () => {
         }
     };
 
-    const handleOpenModal = (patient: Patient | null = null) => {
-        if (patient) {
-            setEditingPatient(patient);
-            setFormData({
-                name: patient.name,
-                dni: patient.dni,
-                dob: patient.dob,
-                email: patient.email,
-                phone: patient.phone
-            });
-        } else {
-            setEditingPatient(null);
-            setFormData({
-                name: '',
-                dni: '',
-                dob: '',
-                email: '',
-                phone: ''
-            });
-        }
-        setIsModalOpen(true);
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            if (editingPatient) {
-                await axios.put(`${API_BASE_URL}/patients/${editingPatient.id}`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            } else {
-                await axios.post(`${API_BASE_URL}/patients`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            }
+            await axios.post(`${API_BASE_URL}/patients`, formData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             fetchPatients();
-            setIsModalOpen(false);
+            setIsCreating(false);
+            setFormData({ name: '', email: '', phone: '', dni: '', birth_date: '', gender: '', notes: '' });
         } catch (err) {
             console.error(err);
         }
     };
 
-    const filteredPatients = patients.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.dni.includes(searchTerm)
+    const handleDelete = async (id: number) => {
+        if (!confirm('¿Estás seguro de eliminar este paciente?')) return;
+        try {
+            await axios.delete(`${API_BASE_URL}/patients/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchPatients();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const filteredPatients = patients.filter(patient =>
+        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.dni.includes(searchTerm)
     );
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Pacientes</h2>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-800">Gestión de Pacientes</h2>
                 <button
-                    onClick={() => handleOpenModal()}
+                    onClick={() => setIsCreating(!isCreating)}
                     className="flex items-center bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
                 >
                     <Plus size={20} className="mr-2" />
-                    Nuevo Paciente
+                    {isCreating ? 'Cancelar' : 'Nuevo Paciente'}
                 </button>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre o DNI..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-primary-500 focus:border-primary-500"
-                    />
-                </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DNI</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredPatients.map(patient => (
-                            <tr key={patient.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{patient.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{patient.dni}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                    <div className="text-sm">{patient.email}</div>
-                                    <div className="text-sm">{patient.phone}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <button
-                                        onClick={() => handleOpenModal(patient)}
-                                        className="text-primary-600 hover:text-primary-900"
-                                    >
-                                        <Edit2 size={18} />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                        <div className="flex justify-between items-center p-6 border-b">
-                            <h3 className="text-lg font-bold">{editingPatient ? 'Editar Paciente' : 'Nuevo Paciente'}</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                                <X size={20} />
+            {isCreating && (
+                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                            <input
+                                type="text"
+                                required
+                                value={formData.name}
+                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                className="w-full border rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">DNI / Pasaporte</label>
+                            <input
+                                type="text"
+                                value={formData.dni}
+                                onChange={(e) => setFormData({...formData, dni: e.target.value})}
+                                className="w-full border rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                className="w-full border rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                            <input
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                className="w-full border rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
+                            <input
+                                type="date"
+                                value={formData.birth_date}
+                                onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
+                                className="w-full border rounded-md px-3 py-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Género</label>
+                            <select
+                                value={formData.gender}
+                                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                                className="w-full border rounded-md px-3 py-2"
+                            >
+                                <option value="">Seleccionar...</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                                <option value="O">Otro</option>
+                            </select>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                            <textarea
+                                value={formData.notes}
+                                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                                className="w-full border rounded-md px-3 py-2 h-24"
+                            />
+                        </div>
+                        <div className="md:col-span-2 flex justify-end">
+                            <button type="submit" className="bg-secondary-600 text-white px-4 py-2 rounded-lg hover:bg-secondary-700">
+                                Guardar Paciente
                             </button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full border rounded-md px-3 py-2"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">DNI</label>
-                                    <input
-                                        type="text"
-                                        className="w-full border rounded-md px-3 py-2"
-                                        value={formData.dni}
-                                        onChange={(e) => setFormData({...formData, dni: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
-                                    <input
-                                        type="date"
-                                        className="w-full border rounded-md px-3 py-2"
-                                        value={formData.dob}
-                                        onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input
-                                        type="email"
-                                        className="w-full border rounded-md px-3 py-2"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                                    <input
-                                        type="tel"
-                                        className="w-full border rounded-md px-3 py-2"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                    />
-                                </div>
-                            </div>
-                            <div className="mt-6 flex justify-end">
-                                <button
-                                    type="submit"
-                                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 flex items-center"
-                                >
-                                    <Save size={18} className="mr-2" />
-                                    Guardar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                    </form>
                 </div>
             )}
+
+            <div className="bg-white rounded-lg shadow-md border border-gray-200">
+                <div className="p-4 border-b border-gray-200">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Buscar paciente por nombre o DNI..."
+                            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                    {filteredPatients.map(patient => (
+                        <div key={patient.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow relative group">
+                            <button
+                                onClick={() => handleDelete(patient.id)}
+                                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                Eliminar
+                            </button>
+                            <div className="flex items-center mb-3">
+                                <div className="bg-primary-100 p-2 rounded-full text-primary-600 mr-3">
+                                    <User size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-800">{patient.name}</h3>
+                                    <p className="text-sm text-gray-500">DNI: {patient.dni}</p>
+                                </div>
+                            </div>
+                            <div className="space-y-2 text-sm text-gray-600">
+                                {patient.email && (
+                                    <div className="flex items-center"><Mail size={16} className="mr-2" /> {patient.email}</div>
+                                )}
+                                {patient.phone && (
+                                    <div className="flex items-center"><Phone size={16} className="mr-2" /> {patient.phone}</div>
+                                )}
+                                {patient.birth_date && (
+                                    <div className="flex items-center"><Calendar size={16} className="mr-2" /> {new Date(patient.birth_date).toLocaleDateString()}</div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                    {filteredPatients.length === 0 && (
+                        <div className="col-span-full text-center py-8 text-gray-500">
+                            No se encontraron pacientes.
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

@@ -1,23 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 import { Plus, Trash2, Save, X } from 'lucide-react';
-import type { Template } from '../types';
+import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
-const Templates: React.FC = () => {
+interface Template {
+    id: number;
+    name: string;
+    type: 'measurement' | 'formula';
+    fields: any[]; // [string, string, ...] or [{name: string, zone: string}, ...]
+}
+
+const Templates = () => {
     const { token } = useAuth();
     const [templates, setTemplates] = useState<Template[]>([]);
     const [isCreating, setIsCreating] = useState(false);
-
-    // Form State
     const [name, setName] = useState('');
     const [type, setType] = useState<'measurement' | 'formula'>('measurement');
-    const [fields, setFields] = useState<string[]>(['']);
+
+    // Using objects for fields if measurement (requires zone)
+    const [fields, setFields] = useState<any[]>([{ name: '', zone: 'todas' }]);
+    const [zones, setZones] = useState<{ value: string; label: string }[]>([]);
 
     useEffect(() => {
         fetchTemplates();
+        fetchZones();
     }, []);
+
+    const fetchZones = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/zones`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setZones([{ value: 'todas', label: 'Todas las Zonas' }, ...res.data]);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const fetchTemplates = async () => {
         try {
@@ -30,13 +49,30 @@ const Templates: React.FC = () => {
         }
     };
 
-    const handleAddField = () => {
-        setFields([...fields, '']);
+    const handleTypeChange = (newType: 'measurement' | 'formula') => {
+        setType(newType);
+        if (newType === 'formula') {
+            setFields(['']);
+        } else {
+            setFields([{ name: '', zone: 'todas' }]);
+        }
     };
 
-    const handleFieldChange = (index: number, value: string) => {
+    const handleAddField = () => {
+        if (type === 'formula') {
+            setFields([...fields, '']);
+        } else {
+            setFields([...fields, { name: '', zone: 'todas' }]);
+        }
+    };
+
+    const handleFieldChange = (index: number, key: 'name' | 'zone', value: string) => {
         const newFields = [...fields];
-        newFields[index] = value;
+        if (type === 'measurement') {
+            newFields[index][key] = value;
+        } else {
+            newFields[index] = value;
+        }
         setFields(newFields);
     };
 
@@ -48,7 +84,10 @@ const Templates: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         // Filter empty fields
-        const validFields = fields.filter(f => f.trim() !== '');
+        const validFields = fields.filter(f => {
+            if (typeof f === 'string') return f.trim() !== '';
+            return f.name.trim() !== '';
+        });
         if (!name || validFields.length === 0) return;
 
         try {
@@ -62,7 +101,7 @@ const Templates: React.FC = () => {
             fetchTemplates();
             setIsCreating(false);
             setName('');
-            setFields(['']);
+            setFields([{ name: '', zone: 'todas' }]);
         } catch (err) {
             console.error(err);
         }
@@ -118,7 +157,7 @@ const Templates: React.FC = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                                 <select
                                     value={type}
-                                    onChange={(e) => setType(e.target.value as any)}
+                                    onChange={(e) => handleTypeChange(e.target.value as any)}
                                     className="w-full border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
                                 >
                                     <option value="measurement">Mediciones</option>
@@ -133,11 +172,32 @@ const Templates: React.FC = () => {
                                 <div key={index} className="flex gap-2 mb-2">
                                     <input
                                         type="text"
-                                        value={field}
-                                        onChange={(e) => handleFieldChange(index, e.target.value)}
+                                        value={typeof field === 'string' ? field : field.name}
+                                        onChange={(e) => {
+                                            if (type === 'formula') {
+                                                const newFields = [...fields];
+                                                newFields[index] = e.target.value;
+                                                setFields(newFields);
+                                            } else {
+                                                handleFieldChange(index, 'name', e.target.value);
+                                            }
+                                        }}
                                         className="flex-1 border rounded-md px-3 py-2"
                                         placeholder={`Campo ${index + 1}`}
+                                        required
                                     />
+                                    {type === 'measurement' && (
+                                        <select
+                                            value={typeof field === 'string' ? 'todas' : field.zone}
+                                            onChange={(e) => handleFieldChange(index, 'zone', e.target.value)}
+                                            className="border rounded-md px-3 py-2 w-48"
+                                            required
+                                        >
+                                            {zones.map(zone => (
+                                                <option key={zone.value} value={zone.value}>{zone.label}</option>
+                                            ))}
+                                        </select>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => handleRemoveField(index)}
@@ -189,8 +249,13 @@ const Templates: React.FC = () => {
                         <div className="text-sm text-gray-600">
                             <p className="font-medium mb-1">Campos:</p>
                             <ul className="list-disc list-inside">
-                                {template.fields.slice(0, 5).map((field, i) => (
-                                    <li key={i}>{field}</li>
+                                {template.fields.slice(0, 5).map((field: any, i) => (
+                                    <li key={i}>
+                                        {typeof field === 'string' ? field : field.name}
+                                        {typeof field !== 'string' && field.zone && field.zone !== 'todas' && (
+                                            <span className="text-xs text-gray-400 ml-1">({field.zone})</span>
+                                        )}
+                                    </li>
                                 ))}
                                 {template.fields.length > 5 && <li>... (+{template.fields.length - 5})</li>}
                             </ul>
