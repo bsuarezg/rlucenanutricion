@@ -1,69 +1,104 @@
 <?php
-class DB {
-    private $pdo;
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-    public function __construct() {
-        $dbDir = __DIR__ . '/db';
-        if (!is_dir($dbDir)) {
-            mkdir($dbDir, 0777, true);
-        }
-        $dbPath = $dbDir . '/nutrition.db';
-        $this->pdo = new PDO("sqlite:" . $dbPath);
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->initDb();
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+function getDB() {
+    $dbPath = __DIR__ . '/db/nutrition.db';
+    $dir = dirname($dbPath);
+
+    if (!file_exists($dir)) {
+        mkdir($dir, 0777, true);
     }
 
-    public function getPdo() {
-        return $this->pdo;
-    }
+    $db = new SQLite3($dbPath);
+    $db->busyTimeout(5000);
 
-    private function initDb() {
-        $this->pdo->exec("CREATE TABLE IF NOT EXISTS users (
+    // Enable foreign keys
+    $db->exec('PRAGMA foreign_keys = ON;');
+
+    // Create tables if they don't exist
+    $db->exec('
+        CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password_hash TEXT
-        )");
+            password TEXT
+        );
 
-        $this->pdo->exec("CREATE TABLE IF NOT EXISTS patients (
+        CREATE TABLE IF NOT EXISTS patients (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            dni TEXT,
-            dob TEXT,
             email TEXT,
             phone TEXT,
+            dni TEXT UNIQUE,
+            birth_date DATE,
+            gender TEXT,
+            notes TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )");
+        );
 
-        $this->pdo->exec("CREATE TABLE IF NOT EXISTS sessions (
+        CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             patient_id INTEGER,
-            date TEXT,
-            place TEXT,
+            date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT,
             type TEXT,
-            price REAL,
-            attended INTEGER DEFAULT 1,
-            clinical_data TEXT,
-            formula_data TEXT,
-            FOREIGN KEY(patient_id) REFERENCES patients(id)
-        )");
+            data TEXT,
+            FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+        );
 
-        $this->pdo->exec("CREATE INDEX IF NOT EXISTS idx_sessions_patient_id ON sessions(patient_id)");
-
-        $this->pdo->exec("CREATE TABLE IF NOT EXISTS templates (
+        CREATE TABLE IF NOT EXISTS templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             type TEXT NOT NULL,
-            fields TEXT NOT NULL
-        )");
+            fields TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
 
-        // Admin user creation
-        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE username = ?");
-        $stmt->execute(['rlucena']);
-        if (!$stmt->fetch()) {
-             $hash = password_hash('Gilb3rt01+', PASSWORD_DEFAULT);
-             $stmt = $this->pdo->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
-             $stmt->execute(['rlucena', $hash]);
+        CREATE TABLE IF NOT EXISTS zones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            value TEXT NOT NULL UNIQUE,
+            label TEXT NOT NULL
+        );
+    ');
+
+    // Create default user if not exists
+    $stmt = $db->prepare('SELECT COUNT(*) as count FROM users');
+    $result = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+
+    if ($result['count'] == 0) {
+        $stmt = $db->prepare('INSERT INTO users (username, password) VALUES (:username, :password)');
+        $stmt->bindValue(':username', 'rlucena', SQLITE3_TEXT);
+        // Password is 'Gilb3rt01+'
+        $stmt->bindValue(':password', password_hash('Gilb3rt01+', PASSWORD_DEFAULT), SQLITE3_TEXT);
+        $stmt->execute();
+    }
+
+    // Seed zones if table is empty
+    $stmt = $db->prepare('SELECT COUNT(*) as count FROM zones');
+    $result = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+
+    if ($result['count'] == 0) {
+        $default_zones = [
+            ['value' => 'torso', 'label' => 'Torso'],
+            ['value' => 'piernas', 'label' => 'Piernas'],
+            ['value' => 'brazos', 'label' => 'Brazos'],
+            ['value' => 'cabeza', 'label' => 'Cabeza'],
+            ['value' => 'cuello', 'label' => 'Cuello']
+        ];
+
+        $stmt = $db->prepare('INSERT INTO zones (value, label) VALUES (:value, :label)');
+        foreach ($default_zones as $zone) {
+            $stmt->bindValue(':value', $zone['value'], SQLITE3_TEXT);
+            $stmt->bindValue(':label', $zone['label'], SQLITE3_TEXT);
+            $stmt->execute();
         }
     }
+
+    return $db;
 }
-?>

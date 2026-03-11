@@ -43,7 +43,8 @@ const ProtectedLayout: React.FC = () => {
                     <SidebarItem to="/" Icon={LayoutDashboard} label="Dashboard" />
                     <SidebarItem to="/patients" Icon={Users} label="Pacientes" />
                     <SidebarItem to="/sessions" Icon={FileText} label="Sesiones" />
-                    <SidebarItem to="/templates" Icon={Settings} label="Configuración" />
+                    <SidebarItem to="/templates" Icon={Settings} label="Plantillas" />
+                    <SidebarItem to="/zones" Icon={Settings} label="Zonas Corporales" />
                 </nav>
 
                 <div className="p-4 border-t border-gray-100">

@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
 import Sessions from './pages/Sessions';
 import Templates from './pages/Templates';
+import Zones from './pages/Zones';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="patients" element={<Patients />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="templates" element={<Templates />} />
+            <Route path="zones" element={<Zones />} />
           </Route>
         </Routes>
       </Router>
