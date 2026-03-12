@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Save, FileText, Activity } from 'lucide-react';
+import ExcelMeasurementsTable from './ExcelMeasurementsTable';
+import FormulaEvaluation from './FormulaEvaluation';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
 import ZoneMeasurements from './ZoneMeasurements';
@@ -31,8 +33,10 @@ const SessionForm = () => {
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [notes, setNotes] = useState('');
     const [type, setType] = useState<'measurement' | 'formula'>('measurement');
-    const [fields, setFields] = useState<string[]>([]);
+    const [fields, setFields] = useState<any[]>([]);
     const [data, setData] = useState<Record<string, string>>({});
+    const [measurements, setMeasurements] = useState<any[]>([]);
+    const [formulasResults, setFormulasResults] = useState<any[]>([]);
 
     useEffect(() => {
         fetchPatients();
@@ -125,7 +129,9 @@ const SessionForm = () => {
                 patient_id: selectedPatientId,
                 notes,
                 type,
-                data: sessionData
+                data: sessionData,
+                measurements: measurements,
+                formulas_results: formulasResults
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -255,31 +261,48 @@ const SessionForm = () => {
                 <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-800 mb-4 border-b pb-2">Registro de Mediciones por Zonas</h3>
                     <ZoneMeasurements />
+
+                    <h3 className="text-lg font-medium text-gray-800 mb-4 mt-8 border-b pb-2">Mediciones Individuales (Plantilla)</h3>
+                    <ExcelMeasurementsTable
+                        templateFields={fields}
+                        patientId={selectedPatientId}
+                        onMeasurementsChange={setMeasurements}
+                    />
                 </div>
             ) : (
                 <div className="mb-6 space-y-4">
                     <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Variables Personalizadas</h3>
-                    {fields.map((field, index) => (
-                        <div key={index} className="flex gap-4">
-                            <input
-                                type="text"
-                                value={field}
-                                disabled
-                                className="w-1/3 border rounded-md px-3 py-2 bg-gray-50"
-                            />
-                            <input
-                                type="text"
-                                value={data[field] || ''}
-                                onChange={(e) => setData({ ...data, [field]: e.target.value })}
-                                className="flex-1 border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
-                                placeholder="Valor"
-                                required
-                            />
-                        </div>
-                    ))}
+                    {fields.map((field, index) => {
+                        const fieldName = typeof field === 'string' ? field : field.name;
+                        return (
+                            <div key={index} className="flex gap-4">
+                                <input
+                                    type="text"
+                                    value={fieldName}
+                                    disabled
+                                    className="w-1/3 border rounded-md px-3 py-2 bg-gray-50"
+                                />
+                                <input
+                                    type="text"
+                                    value={data[fieldName] || ''}
+                                    onChange={(e) => setData({ ...data, [fieldName]: e.target.value })}
+                                    className="flex-1 border rounded-md px-3 py-2 focus:ring-primary-500 focus:border-primary-500"
+                                    placeholder="Valor"
+                                    required
+                                />
+                            </div>
+                        );
+                    })}
                     {fields.length === 0 && (
                         <p className="text-gray-500 text-sm italic">Selecciona una plantilla para cargar los campos.</p>
                     )}
+
+                    <FormulaEvaluation
+                        templateFields={fields}
+                        data={data}
+                        onFormulasChange={setFormulasResults}
+                        patientId={selectedPatientId}
+                    />
                 </div>
             )}
 
