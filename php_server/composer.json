@@ -1,0 +1,5 @@
+{
+    "require": {
+        "symfony/expression-language": "^7.4"
+    }
+}

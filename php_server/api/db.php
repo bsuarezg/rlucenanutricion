@@ -52,6 +52,57 @@ function getDB() {
             FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
         );
 
+        CREATE TABLE IF NOT EXISTS session_measurements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            measurement_type TEXT NOT NULL,
+            value1 REAL,
+            value2 REAL,
+            value3 REAL,
+            final_value REAL,
+            FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            setting_key TEXT NOT NULL UNIQUE,
+            setting_value TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS formulas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            expression TEXT NOT NULL,
+            pending_recalculation BOOLEAN DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS constant_groups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS constant_values (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            group_id INTEGER NOT NULL,
+            gender TEXT,
+            age_min INTEGER,
+            age_max INTEGER,
+            value REAL NOT NULL,
+            FOREIGN KEY (group_id) REFERENCES constant_groups(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS session_formula_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            formula_id INTEGER NOT NULL,
+            result_value REAL,
+            is_outdated BOOLEAN DEFAULT 0,
+            FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY (formula_id) REFERENCES formulas(id) ON DELETE CASCADE
+        );
+
         CREATE TABLE IF NOT EXISTS templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,

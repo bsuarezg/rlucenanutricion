@@ -6,3 +6,4 @@ dist
 .DS_Store
 *.log
 DISTRIBUCION/
+php_server/vendor/

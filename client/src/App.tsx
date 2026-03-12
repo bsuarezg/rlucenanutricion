@@ -7,6 +7,7 @@ import Patients from './pages/Patients';
 import Sessions from './pages/Sessions';
 import Templates from './pages/Templates';
 import Zones from './pages/Zones';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="sessions" element={<Sessions />} />
             <Route path="templates" element={<Templates />} />
             <Route path="zones" element={<Zones />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
       </Router>
