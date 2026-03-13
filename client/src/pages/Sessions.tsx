@@ -46,9 +46,9 @@ const Sessions = () => {
                 <h2 className="text-2xl font-bold text-gray-800">Registro de Sesiones</h2>
                 <button
                     onClick={() => setIsCreating(!isCreating)}
-                    className="flex items-center bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
+                    className={`flex items-center px-4 py-2 rounded-lg ${isCreating ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-primary-600 text-white hover:bg-primary-700'}`}
                 >
-                    <Plus size={20} className="mr-2" />
+                    {!isCreating && <Plus size={20} className="mr-2" />}
                     {isCreating ? 'Cancelar' : 'Nueva Sesión'}
                 </button>
             </div>

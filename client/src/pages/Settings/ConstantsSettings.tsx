@@ -20,8 +20,8 @@ interface ConstantGroup {
 export default function ConstantsSettings() {
   const [groups, setGroups] = useState<ConstantGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [currentGroup, setCurrentGroup] = useState<Partial<ConstantGroup>>({ values: [] });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Partial<ConstantGroup> | null>(null);
 
   useEffect(() => {
     fetchConstants();
@@ -40,29 +40,31 @@ export default function ConstantsSettings() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSaveGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      if (currentGroup.id) {
-        await axios.put(`${API_BASE_URL}/constants/${currentGroup.id}`, currentGroup, {
+      if (editingGroup?.id) {
+        await axios.put(`${API_BASE_URL}/constants?id=${editingGroup.id}`, editingGroup, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
       } else {
-        await axios.post(`${API_BASE_URL}/constants`, currentGroup, {
+        await axios.post(`${API_BASE_URL}/constants`, editingGroup, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
       }
       fetchConstants();
-      setShowModal(false);
-      setCurrentGroup({ values: [] });
+      setIsModalOpen(false);
+      setEditingGroup(null);
     } catch (error) {
       console.error('Error saving constant group:', error);
+      alert('Error al guardar la matriz de constantes. Por favor, revisa que los datos sean correctos.');
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('¿Eliminar matriz de constantes?')) {
+  const handleDeleteGroup = async (id: number) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta tabla de constantes? Las fórmulas que dependan de ella podrían dejar de funcionar correctamente.')) {
       try {
-        await axios.delete(`${API_BASE_URL}/constants/${id}`, {
+        await axios.delete(`${API_BASE_URL}/constants?id=${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         fetchConstants();
@@ -73,14 +75,18 @@ export default function ConstantsSettings() {
   };
 
   const handleAddValue = () => {
-    setCurrentGroup(prev => ({
-      ...prev,
-      values: [...(prev.values || []), { gender: 'Hombre', age_min: null, age_max: null, value: 0 }]
-    }));
+    setEditingGroup(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        values: [...(prev.values || []), { gender: null, age_min: null, age_max: null, value: 0 }]
+      };
+    });
   };
 
   const handleRemoveValue = (index: number) => {
-    setCurrentGroup(prev => {
+    setEditingGroup(prev => {
+      if (!prev) return prev;
       const newValues = [...(prev.values || [])];
       newValues.splice(index, 1);
       return { ...prev, values: newValues };
@@ -88,7 +94,8 @@ export default function ConstantsSettings() {
   };
 
   const handleValueChange = (index: number, field: keyof ConstantValue, value: any) => {
-    setCurrentGroup(prev => {
+    setEditingGroup(prev => {
+      if (!prev) return prev;
       const newValues = [...(prev.values || [])];
       newValues[index] = { ...newValues[index], [field]: value };
       return { ...prev, values: newValues };
@@ -105,10 +112,10 @@ export default function ConstantsSettings() {
           <p className="text-sm text-gray-500">Define tablas de valores que dependen de género y rango de edad.</p>
         </div>
         <button
-          onClick={() => { setCurrentGroup({ values: [] }); setShowModal(true); }}
-          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          onClick={() => { setEditingGroup({ name: '', values: [] }); setIsModalOpen(true); }}
+          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-          <Add className="mr-2" /> Nuevo Grupo
+          <Add className="h-5 w-5 mr-2" /> Nueva Tabla
         </button>
       </div>
 
@@ -118,8 +125,8 @@ export default function ConstantsSettings() {
             <div className="flex justify-between items-center mb-4 border-b pb-2">
               <h3 className="text-lg font-bold text-gray-900">{group.name}</h3>
               <div className="flex space-x-2">
-                <button onClick={() => { setCurrentGroup(group); setShowModal(true); }} className="text-indigo-600 hover:text-indigo-900"><Edit /></button>
-                <button onClick={() => handleDelete(group.id)} className="text-red-600 hover:text-red-900"><Delete /></button>
+                <button onClick={() => { setEditingGroup(group); setIsModalOpen(true); }} className="text-indigo-600 hover:text-indigo-900" title="Editar tabla"><Edit className="h-5 w-5"/></button>
+                <button onClick={() => handleDeleteGroup(group.id)} className="text-red-600 hover:text-red-900" title="Eliminar tabla"><Delete className="h-5 w-5"/></button>
               </div>
             </div>
 
@@ -150,20 +157,21 @@ export default function ConstantsSettings() {
         ))}
       </div>
 
-      {showModal && (
+      {isModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-xl w-full max-w-4xl">
-            <h3 className="text-lg font-bold mb-4">{currentGroup.id ? 'Editar Grupo de Constantes' : 'Nuevo Grupo de Constantes'}</h3>
+            <h3 className="text-lg font-bold mb-4">{editingGroup?.id ? 'Editar Grupo de Constantes' : 'Nuevo Grupo de Constantes'}</h3>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nombre del Grupo (identificador)</label>
                 <input
                   type="text"
-                  value={currentGroup.name || ''}
-                  onChange={e => setCurrentGroup({...currentGroup, name: e.target.value})}
+                  value={editingGroup?.name || ''}
+                  onChange={e => setEditingGroup(prev => ({ ...prev, name: e.target.value }))}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                   placeholder="ej: CONSTANTES_GRASA"
+                  required
                 />
                 <p className="text-xs text-gray-500 mt-1">Este nombre se usará en las fórmulas para buscar el valor (ej: CONSTANTES_GRASA_valor_aplicado)</p>
               </div>
@@ -186,7 +194,7 @@ export default function ConstantsSettings() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {currentGroup.values?.map((val, idx) => (
+                  {editingGroup?.values?.map((val, idx) => (
                     <tr key={idx}>
                       <td className="px-4 py-2">
                         <select
@@ -218,8 +226,8 @@ export default function ConstantsSettings() {
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 border border-gray-300 rounded text-gray-700">Cancelar</button>
-              <button onClick={handleSave} className="px-4 py-2 bg-indigo-600 text-white rounded">Guardar Grupo</button>
+              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded text-gray-700">Cancelar</button>
+              <button onClick={handleSaveGroup} className="px-4 py-2 bg-indigo-600 text-white rounded">Guardar Grupo</button>
             </div>
           </div>
         </div>
