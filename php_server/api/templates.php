@@ -14,7 +14,7 @@ require_once 'db.php';
 $user = authenticate();
 if (!$user) {
     http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode(['error' => 'Unauthorized'], JSON_UNESCAPED_UNICODE);
     exit();
 }
 
@@ -27,27 +27,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $row['fields'] = json_decode($row['fields'], true);
         $templates[] = $row;
     }
-    echo json_encode($templates);
+    echo json_encode($templates, JSON_UNESCAPED_UNICODE);
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (!isset($data['name']) || !isset($data['type']) || !isset($data['fields'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Name, type, and fields are required']);
+        echo json_encode(['error' => 'Name, type, and fields are required'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
     $stmt = $db->prepare('INSERT INTO templates (name, type, fields) VALUES (:name, :type, :fields)');
     $stmt->bindValue(':name', $data['name'], SQLITE3_TEXT);
     $stmt->bindValue(':type', $data['type'], SQLITE3_TEXT);
-    $stmt->bindValue(':fields', json_encode($data['fields']), SQLITE3_TEXT);
+    $stmt->bindValue(':fields', json_encode($data['fields']), SQLITE3_TEXT, JSON_UNESCAPED_UNICODE);
 
     try {
         $stmt->execute();
         $id = $db->lastInsertRowID();
-        echo json_encode(['id' => $id, 'name' => $data['name']]);
+        echo json_encode(['id' => $id, 'name' => $data['name']], JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     if (!is_numeric($id)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Invalid ID']);
+        echo json_encode(['error' => 'Invalid ID'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -64,5 +64,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
     $stmt->execute();
 
-    echo json_encode(['success' => true]);
+    echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 }

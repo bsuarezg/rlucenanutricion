@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!isset($data['expression']) || !isset($data['variables'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Expression and variables are required']);
+        echo json_encode(['error' => 'Expression and variables are required'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -31,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         $result = $language->evaluate($data['expression'], $data['variables']);
-        echo json_encode(['result' => $result]);
+        echo json_encode(['result' => $result], JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         http_response_code(400);
-        echo json_encode(['error' => 'Evaluation error: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'Evaluation error: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 }

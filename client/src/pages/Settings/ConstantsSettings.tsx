@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
@@ -57,7 +58,7 @@ export default function ConstantsSettings() {
       setEditingGroup(null);
     } catch (error) {
       console.error('Error saving constant group:', error);
-      alert('Error al guardar la matriz de constantes. Por favor, revisa que los datos sean correctos.');
+      toast.error('Error al guardar la matriz de constantes. Por favor, revisa que los datos sean correctos.');
     }
   };
 

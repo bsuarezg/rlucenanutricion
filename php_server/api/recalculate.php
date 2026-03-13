@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ... (implementation for session recalculation)
         // This is complex to implement fully here without knowing the exact frontend payload structure for measurements.
         // We will mock this or provide a basic structure.
-        echo json_encode(['success' => true, 'message' => 'Session recalculation requested']);
+        echo json_encode(['success' => true, 'message' => 'Session recalculation requested'], JSON_UNESCAPED_UNICODE);
 
     } elseif (isset($data['formula_id'])) {
         // Recalculate all sessions for a specific formula
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$formula) {
             http_response_code(404);
-            echo json_encode(['error' => 'Formula not found']);
+            echo json_encode(['error' => 'Formula not found'], JSON_UNESCAPED_UNICODE);
             exit();
         }
 
@@ -71,9 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $updateStmt->bindValue(':id', $formulaId, SQLITE3_INTEGER);
         $updateStmt->execute();
 
-        echo json_encode(['success' => true, 'message' => 'All sessions recalculated for formula']);
+        echo json_encode(['success' => true, 'message' => 'All sessions recalculated for formula'], JSON_UNESCAPED_UNICODE);
     } else {
         http_response_code(400);
-        echo json_encode(['error' => 'session_id or formula_id is required']);
+        echo json_encode(['error' => 'session_id or formula_id is required'], JSON_UNESCAPED_UNICODE);
     }
 }

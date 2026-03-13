@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
@@ -68,7 +69,7 @@ export default function FormulasSettings() {
         await axios.post(`${API_BASE_URL}/recalculate`, { formula_id: currentFormula.id }, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-        alert('Histórico recalculado con éxito.');
+        toast.success('Histórico recalculado con éxito.');
       }
 
       fetchFormulas();
@@ -98,7 +99,7 @@ export default function FormulasSettings() {
         await axios.post(`${API_BASE_URL}/recalculate`, { formula_id: id }, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-        alert('Histórico recalculado con éxito.');
+        toast.success('Histórico recalculado con éxito.');
         fetchFormulas();
     } catch (error) {
         console.error('Error recalculating formula:', error);

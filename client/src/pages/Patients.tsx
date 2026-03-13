@@ -202,7 +202,7 @@ const Patients = () => {
                                     <div className="flex items-center"><Phone size={16} className="mr-2" /> {patient.phone}</div>
                                 )}
                                 {patient.birth_date && (
-                                    <div className="flex items-center"><Calendar size={16} className="mr-2" /> {new Date(patient.birth_date).toLocaleDateString()}</div>
+                                    <div className="flex items-center"><Calendar size={16} className="mr-2" /> {new Date(patient.birth_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
                                 )}
                             </div>
                         </div>

@@ -14,7 +14,7 @@ require_once 'db.php';
 $user = authenticate();
 if (!$user) {
     http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode(['error' => 'Unauthorized'], JSON_UNESCAPED_UNICODE);
     exit();
 }
 
@@ -51,12 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $sessions[] = $row;
     }
-    echo json_encode($sessions);
+    echo json_encode($sessions, JSON_UNESCAPED_UNICODE);
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (!isset($data['patient_id']) || !isset($data['type'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Patient ID and type are required']);
+        echo json_encode(['error' => 'Patient ID and type are required'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->bindValue(':patient_id', $data['patient_id'], SQLITE3_INTEGER);
         $stmt->bindValue(':notes', $data['notes'] ?? '', SQLITE3_TEXT);
         $stmt->bindValue(':type', $data['type'], SQLITE3_TEXT);
-        $stmt->bindValue(':data', json_encode($data['data'] ?? []), SQLITE3_TEXT);
+        $stmt->bindValue(':data', json_encode($data['data'] ?? []), SQLITE3_TEXT, JSON_UNESCAPED_UNICODE);
         $stmt->execute();
         $id = $db->lastInsertRowID();
 
@@ -96,10 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
 
         $db->exec('COMMIT');
-        echo json_encode(['id' => $id, 'success' => true]);
+        echo json_encode(['id' => $id, 'success' => true], JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         $db->exec('ROLLBACK');
         http_response_code(500);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 }

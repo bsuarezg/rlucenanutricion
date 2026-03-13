@@ -19,14 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $settings[$row['setting_key']] = $row['setting_value'];
     }
 
-    echo json_encode($settings);
+    echo json_encode($settings, JSON_UNESCAPED_UNICODE);
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Update or insert settings
     $data = json_decode(file_get_contents('php://input'), true);
 
     if (!$data) {
         http_response_code(400);
-        echo json_encode(['error' => 'Invalid data']);
+        echo json_encode(['error' => 'Invalid data'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         foreach ($data as $key => $value) {
             $stmt->bindValue(':key', $key, SQLITE3_TEXT);
-            $stmt->bindValue(':value', is_array($value) ? json_encode($value) : $value, SQLITE3_TEXT);
+            $stmt->bindValue(':value', is_array($value) ? json_encode($value) : $value, SQLITE3_TEXT, JSON_UNESCAPED_UNICODE);
             $stmt->execute();
         }
 
@@ -55,10 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $updatedSettings[$row['setting_key']] = $row['setting_value'];
         }
 
-        echo json_encode($updatedSettings);
+        echo json_encode($updatedSettings, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         $db->exec('ROLLBACK');
         http_response_code(500);
-        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 }

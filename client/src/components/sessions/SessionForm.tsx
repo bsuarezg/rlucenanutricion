@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Save, FileText, Activity } from 'lucide-react';
@@ -5,7 +6,6 @@ import ExcelMeasurementsTable from './ExcelMeasurementsTable';
 import FormulaEvaluation from './FormulaEvaluation';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
-import ZoneMeasurements from './ZoneMeasurements';
 
 interface Patient {
     id: number;
@@ -145,10 +145,10 @@ const SessionForm = () => {
             setData({});
             localStorage.removeItem('zoneMeasurements');
             window.dispatchEvent(new Event('zone_config_updated'));
-            alert('Sesión guardada correctamente');
+            toast.success('Sesión guardada correctamente');
         } catch (err) {
             console.error(err);
-            alert('Error al guardar la sesión');
+            toast.error('Error al guardar la sesión');
         }
     };
 
@@ -259,10 +259,8 @@ const SessionForm = () => {
 
             {type === 'measurement' ? (
                 <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-800 mb-4 border-b pb-2">Registro de Mediciones por Zonas</h3>
-                    <ZoneMeasurements />
-
-                    <h3 className="text-lg font-medium text-gray-800 mb-4 mt-8 border-b pb-2">Mediciones Individuales (Plantilla)</h3>
+                    <h3 className="text-lg font-medium text-gray-800 mb-4 border-b pb-2">Registro de Mediciones (Plantilla)</h3>
+                    <p className="text-sm text-gray-500 mb-4">Introduce al menos 2 medidas por zona. Si hay desviación, se requerirá una tercera. El sistema calculará automáticamente la mediana.</p>
                     <ExcelMeasurementsTable
                         templateFields={fields}
                         patientId={selectedPatientId}
