@@ -1,9 +1,9 @@
 <?php
 function generateToken($payload) {
     $secret_key = 'super_secret_key_change_in_production';
-    $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
+    $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256'], JSON_UNESCAPED_UNICODE);
     $payload['exp'] = time() + (8 * 60 * 60); // 8 hours
-    $payload = json_encode($payload);
+    $payload = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
     $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
     $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));

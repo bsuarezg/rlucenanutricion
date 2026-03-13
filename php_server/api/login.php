@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
     if (!isset($data['username']) || !isset($data['password'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Missing username or password']);
+        echo json_encode(['error' => 'Missing username or password'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -31,13 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user && password_verify($password, $user['password'])) {
         $token = generateToken(['id' => $user['id'], 'username' => $user['username']]);
-        echo json_encode(['token' => $token, 'user' => ['username' => $user['username']]]);
+        echo json_encode(['token' => $token, 'user' => ['username' => $user['username']]], JSON_UNESCAPED_UNICODE);
     } else {
         http_response_code(401);
-        echo json_encode(['error' => 'Invalid credentials']);
+        echo json_encode(['error' => 'Invalid credentials'], JSON_UNESCAPED_UNICODE);
     }
 } else {
     http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
+    echo json_encode(['error' => 'Method not allowed'], JSON_UNESCAPED_UNICODE);
 }
 ?>

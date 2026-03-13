@@ -46,7 +46,7 @@ if ($id) {
 }
 
 if (empty($resource)) {
-     echo json_encode(['status' => 'API is running']);
+     echo json_encode(['status' => 'API is running'], JSON_UNESCAPED_UNICODE);
      exit;
 }
 
@@ -56,6 +56,6 @@ if (file_exists($file)) {
     require $file;
 } else {
     http_response_code(404);
-    echo json_encode(['error' => 'Not Found', 'uri' => $uri, 'resource' => $resource]);
+    echo json_encode(['error' => 'Not Found', 'uri' => $uri, 'resource' => $resource], JSON_UNESCAPED_UNICODE);
 }
 ?>

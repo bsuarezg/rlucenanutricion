@@ -27,10 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $values[] = $row;
             }
             $group['values'] = $values;
-            echo json_encode($group);
+            echo json_encode($group, JSON_UNESCAPED_UNICODE);
         } else {
             http_response_code(404);
-            echo json_encode(['error' => 'Constant group not found']);
+            echo json_encode(['error' => 'Constant group not found'], JSON_UNESCAPED_UNICODE);
         }
     } else {
         $result = $db->query('SELECT * FROM constant_groups ORDER BY name ASC');
@@ -47,14 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $row['values'] = $values;
             $groups[] = $row;
         }
-        echo json_encode($groups);
+        echo json_encode($groups, JSON_UNESCAPED_UNICODE);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
 
     if (!isset($data['name'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Name is required']);
+        echo json_encode(['error' => 'Name is required'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -89,13 +89,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } catch (Exception $e) {
         $db->exec('ROLLBACK');
         http_response_code(500);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $id = isset($_GET['id']) ? intval($_GET['id']) : null;
     if (!$id) {
         http_response_code(400);
-        echo json_encode(['error' => 'ID is required']);
+        echo json_encode(['error' => 'ID is required'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     if (!isset($data['name'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Name is required']);
+        echo json_encode(['error' => 'Name is required'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -144,13 +144,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } catch (Exception $e) {
         $db->exec('ROLLBACK');
         http_response_code(500);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $id = isset($_GET['id']) ? intval($_GET['id']) : null;
     if (!$id) {
         http_response_code(400);
-        echo json_encode(['error' => 'ID is required']);
+        echo json_encode(['error' => 'ID is required'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -159,9 +159,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     try {
         $stmt->execute();
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 }

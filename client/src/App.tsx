@@ -8,10 +8,12 @@ import Sessions from './pages/Sessions';
 import Templates from './pages/Templates';
 import Zones from './pages/Zones';
 import Settings from './pages/Settings';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />

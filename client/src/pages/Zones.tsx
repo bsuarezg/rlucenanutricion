@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Trash2 } from 'lucide-react';
@@ -47,7 +48,7 @@ const Zones = () => {
             setNewZone({ value: '', label: '' });
         } catch (err) {
             console.error(err);
-            alert('Error al crear la zona. Puede que ya exista una zona con el mismo nombre.');
+            toast.error('Error al crear la zona. Puede que ya exista una zona con el mismo nombre.');
         }
     };
 
@@ -60,7 +61,7 @@ const Zones = () => {
             fetchZones();
         } catch (err) {
             console.error(err);
-            alert('Error al eliminar la zona.');
+            toast.error('Error al eliminar la zona.');
         }
     };
 
