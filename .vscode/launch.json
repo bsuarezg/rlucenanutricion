@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-chrome",
+      "request": "launch",
+      "name": "Launch Frontend in Chrome",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/client/src",
+      "preLaunchTask": "Start Full App"
+    },
+    {
+      "type": "pwa-msedge",
+      "request": "launch",
+      "name": "Launch Frontend in Edge",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/client/src",
+      "preLaunchTask": "Start Full App"
+    }
+  ]
+}
