@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Frontend (Vite)",
+      "type": "npm",
+      "script": "dev",
+      "path": "client",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*vite.*",
+          "endsPattern": ".*Local.*"
+        }
+      },
+      "presentation": {
+        "panel": "shared",
+        "group": "devServers"
+      }
+    },
+    {
+      "label": "Start Backend (PHP)",
+      "type": "shell",
+      "command": "php -S 127.0.0.1:3001 -t php_server",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "php",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*Listening on.*",
+          "endsPattern": ".*Listening on.*"
+        }
+      },
+      "presentation": {
+        "panel": "shared",
+        "group": "devServers"
+      }
+    },
+    {
+      "label": "Start Full App",
+      "dependsOn": [
+        "Start Frontend (Vite)",
+        "Start Backend (PHP)"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
