@@ -3,6 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('./database');
+const { evaluateFullExpression } = require('./evaluate');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -187,15 +188,82 @@ app.post('/api/evaluate', authenticateToken, (req, res) => {
 });
 
 // Recalculation endpoints
-app.post('/api/recalculate', authenticateToken, (req, res) => {
+app.post('/api/recalculate', authenticateToken, async (req, res) => {
     const { session_id, formula_id } = req.body;
 
     if (session_id) {
         res.json({ success: true, message: 'Session recalculation requested (mock)' });
     } else if (formula_id) {
-        db.run('UPDATE formulas SET pending_recalculation = 0 WHERE id = ?', [formula_id], function(err) {
-             if (err) return res.status(500).json({ error: err.message });
-             res.json({ success: true, message: 'All sessions recalculated for formula' });
+        db.get('SELECT * FROM formulas WHERE id = ?', [formula_id], (err, formula) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!formula) return res.status(404).json({ error: 'Formula not found' });
+
+            db.all('SELECT id, patient_id FROM sessions', [], async (err, sessions) => {
+                if (err) return res.status(500).json({ error: err.message });
+
+                for (let session of sessions) {
+                    try {
+                        // 1. Get patient info
+                        const patient = await new Promise((resolve, reject) => {
+                            db.get('SELECT birth_date, gender FROM patients WHERE id = ?', [session.patient_id], (err, row) => {
+                                if (err) return reject(err);
+                                resolve(row);
+                            });
+                        });
+
+                        let age = 0;
+                        let gender = 'M';
+                        if (patient) {
+                            if (patient.birth_date) {
+                                const dob = new Date(patient.birth_date);
+                                const now = new Date();
+                                const diffTime = Math.abs(now - dob);
+                                age = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365.25));
+                            }
+                            gender = patient.gender === 'Masculino' ? 'M' : 'F';
+                        }
+
+                        // 2. Get measurements for session
+                        const measurements = await new Promise((resolve, reject) => {
+                            db.all('SELECT measurement_type, final_value FROM session_measurements WHERE session_id = ?', [session.id], (err, rows) => {
+                                if (err) return reject(err);
+                                const m = {};
+                                rows.forEach(r => { m[r.measurement_type] = r.final_value; });
+                                resolve(m);
+                            });
+                        });
+
+                        // 3. Evaluate formula
+                        const result = await evaluateFullExpression(db, formula.expression, measurements, age, gender, formula_id);
+
+                        // 4. Update or Insert
+                        await new Promise((resolve, reject) => {
+                            db.get('SELECT id FROM session_formula_results WHERE session_id = ? AND formula_id = ?', [session.id, formula_id], (err, existing) => {
+                                if (err) return reject(err);
+                                if (existing) {
+                                    db.run('UPDATE session_formula_results SET result_value = ?, is_outdated = 0 WHERE id = ?', [result, existing.id], err => {
+                                        if (err) return reject(err);
+                                        resolve();
+                                    });
+                                } else {
+                                    db.run('INSERT INTO session_formula_results (session_id, formula_id, result_value, is_outdated) VALUES (?, ?, ?, 0)', [session.id, formula_id, result], err => {
+                                        if (err) return reject(err);
+                                        resolve();
+                                    });
+                                }
+                            });
+                        });
+                    } catch (e) {
+                        console.error(`Failed to recalculate formula ${formula_id} for session ${session.id}:`, e);
+                    }
+                }
+
+                // Finally clear pending flag
+                db.run('UPDATE formulas SET pending_recalculation = 0 WHERE id = ?', [formula_id], function(err) {
+                     if (err) return res.status(500).json({ error: err.message });
+                     res.json({ success: true, message: 'All sessions recalculated for formula' });
+                });
+            });
         });
     } else {
         res.status(400).json({ error: 'session_id or formula_id is required' });
