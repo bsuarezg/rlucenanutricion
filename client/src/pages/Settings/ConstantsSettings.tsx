@@ -48,10 +48,12 @@ export default function ConstantsSettings() {
         await axios.put(`${API_BASE_URL}/constants?id=${editingGroup.id}`, editingGroup, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        toast.success('Constantes actualizadas exitosamente');
       } else {
         await axios.post(`${API_BASE_URL}/constants`, editingGroup, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        toast.success('Constantes creadas exitosamente');
       }
       fetchConstants();
       setIsModalOpen(false);
@@ -68,9 +70,11 @@ export default function ConstantsSettings() {
         await axios.delete(`${API_BASE_URL}/constants?id=${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        toast.success('Constantes eliminadas exitosamente');
         fetchConstants();
       } catch (error) {
         console.error('Error deleting constant group:', error);
+        toast.error('Error al eliminar las constantes');
       }
     }
   };

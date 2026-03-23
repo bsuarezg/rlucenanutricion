@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->bindValue(':patient_id', $data['patient_id'], SQLITE3_INTEGER);
         $stmt->bindValue(':notes', $data['notes'] ?? '', SQLITE3_TEXT);
         $stmt->bindValue(':type', $data['type'], SQLITE3_TEXT);
-        $stmt->bindValue(':data', json_encode($data['data'] ?? []), SQLITE3_TEXT, JSON_UNESCAPED_UNICODE);
+        $stmt->bindValue(':data', json_encode($data['data'] ?? [], JSON_UNESCAPED_UNICODE), SQLITE3_TEXT);
         $stmt->execute();
         $id = $db->lastInsertRowID();
 

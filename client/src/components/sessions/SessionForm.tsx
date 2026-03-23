@@ -20,7 +20,7 @@ interface Template {
     fields: any[]; // can be string[] or {name: string, zone: string}[]
 }
 
-const SessionForm = () => {
+const SessionForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const { token } = useAuth();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -145,7 +145,8 @@ const SessionForm = () => {
             setData({});
             localStorage.removeItem('zoneMeasurements');
             window.dispatchEvent(new Event('zone_config_updated'));
-            toast.success('Sesión guardada correctamente');
+            toast.success('Sesión guardada exitosamente');
+            if (onSuccess) onSuccess();
         } catch (err) {
             console.error(err);
             toast.error('Error al guardar la sesión');

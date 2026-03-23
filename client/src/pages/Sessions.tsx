@@ -59,7 +59,10 @@ const Sessions = () => {
 
             {isCreating && (
                 <div className="mb-8">
-                    <SessionForm />
+                    <SessionForm onSuccess={() => {
+                        setIsCreating(false);
+                        fetchSessions();
+                    }} />
                 </div>
             )}
 

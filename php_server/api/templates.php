@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $stmt = $db->prepare('INSERT INTO templates (name, type, fields) VALUES (:name, :type, :fields)');
     $stmt->bindValue(':name', $data['name'], SQLITE3_TEXT);
     $stmt->bindValue(':type', $data['type'], SQLITE3_TEXT);
-    $stmt->bindValue(':fields', json_encode($data['fields']), SQLITE3_TEXT, JSON_UNESCAPED_UNICODE);
+    $stmt->bindValue(':fields', json_encode($data['fields'], JSON_UNESCAPED_UNICODE), SQLITE3_TEXT);
 
     try {
         $stmt->execute();

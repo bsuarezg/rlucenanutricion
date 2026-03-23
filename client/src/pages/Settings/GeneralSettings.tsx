@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../config';
 
 export default function GeneralSettings() {
@@ -34,9 +35,11 @@ export default function GeneralSettings() {
       await axios.post(`${API_BASE_URL}/settings`, settings, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
+      toast.success('Configuración guardada correctamente');
       setMessage({ type: 'success', text: 'Configuración guardada correctamente.' });
     } catch (error) {
       console.error('Error saving settings:', error);
+      toast.error('Error al guardar la configuración');
       setMessage({ type: 'error', text: 'Error al guardar la configuración.' });
     } finally {
       setSaving(false);
