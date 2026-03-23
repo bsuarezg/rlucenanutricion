@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Search, User, Mail, Phone, Calendar } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
@@ -45,11 +46,13 @@ const Patients = () => {
             await axios.post(`${API_BASE_URL}/patients`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            toast.success('Paciente guardado exitosamente');
             fetchPatients();
             setIsCreating(false);
             setFormData({ name: '', email: '', phone: '', dni: '', birth_date: '', gender: '', notes: '' });
         } catch (err) {
             console.error(err);
+            toast.error('Error al guardar el paciente');
         }
     };
 
@@ -59,9 +62,11 @@ const Patients = () => {
             await axios.delete(`${API_BASE_URL}/patients/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            toast.success('Paciente eliminado exitosamente');
             fetchPatients();
         } catch (err) {
             console.error(err);
+            toast.error('Error al eliminar el paciente');
         }
     };
 

@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         foreach ($data as $key => $value) {
             $stmt->bindValue(':key', $key, SQLITE3_TEXT);
-            $stmt->bindValue(':value', is_array($value) ? json_encode($value) : $value, SQLITE3_TEXT, JSON_UNESCAPED_UNICODE);
+            $stmt->bindValue(':value', is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value, SQLITE3_TEXT);
             $stmt->execute();
         }
 

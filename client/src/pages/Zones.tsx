@@ -43,6 +43,7 @@ const Zones = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            toast.success('Zona creada exitosamente');
             fetchZones();
             setIsCreating(false);
             setNewZone({ value: '', label: '' });
@@ -58,6 +59,7 @@ const Zones = () => {
             await axios.delete(`${API_BASE_URL}/zones/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            toast.success('Zona eliminada exitosamente');
             fetchZones();
         } catch (err) {
             console.error(err);

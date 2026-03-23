@@ -45,12 +45,14 @@ export default function FormulasSettings() {
         await axios.post(`${API_BASE_URL}/formulas`, { ...currentFormula, pending_recalculation: 0 }, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        toast.success('Fórmula creada exitosamente');
         fetchFormulas();
         setShowModal(false);
         setCurrentFormula({});
       }
     } catch (error) {
       console.error('Error saving formula:', error);
+      toast.error('Error al guardar la fórmula');
     }
   };
 
@@ -70,6 +72,8 @@ export default function FormulasSettings() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         toast.success('Histórico recalculado con éxito.');
+      } else {
+        toast.success('Fórmula actualizada exitosamente');
       }
 
       fetchFormulas();
@@ -78,6 +82,7 @@ export default function FormulasSettings() {
       setCurrentFormula({});
     } catch (error) {
       console.error('Error updating formula/recalculating:', error);
+      toast.error('Error al actualizar la fórmula');
     }
   };
 
@@ -87,9 +92,11 @@ export default function FormulasSettings() {
         await axios.delete(`${API_BASE_URL}/formulas/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        toast.success('Fórmula eliminada exitosamente');
         fetchFormulas();
       } catch (error) {
         console.error('Error deleting formula:', error);
+        toast.error('Error al eliminar la fórmula');
       }
     }
   };

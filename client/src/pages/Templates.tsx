@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Trash2, Save, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
@@ -98,12 +99,14 @@ const Templates = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            toast.success('Plantilla guardada exitosamente');
             fetchTemplates();
             setIsCreating(false);
             setName('');
             setFields([{ name: '', zone: 'todas' }]);
         } catch (err) {
             console.error(err);
+            toast.error('Error al guardar la plantilla');
         }
     };
 
@@ -113,9 +116,11 @@ const Templates = () => {
             await axios.delete(`${API_BASE_URL}/templates/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            toast.success('Plantilla eliminada exitosamente');
             fetchTemplates();
         } catch (err) {
             console.error(err);
+            toast.error('Error al eliminar la plantilla');
         }
     };
 
